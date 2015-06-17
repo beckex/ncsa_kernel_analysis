@@ -8,9 +8,19 @@
 
 using std::vector;
 
+/*	* process an image(matrix) with a kernel(matrix), input are image in a row vector form, the row/col size of image,
+	* kernel in a row vector form, the row/col size of kernel, and the mode. 
+	* mode = 1 means the uppest subimage, mode = 2 means the middle subimages, mode = 3 means the subimage in bottom
+	*
+	* return value:
+	*	-1 for fail, 0 for success
+	* if success, the input vector ret would be the row vector of result matrix, ret_row/ret_col would be the size of
+	* result matrix. 
+*/
+
 int process(vector<float>image, int img_row, int img_col, vector<float>kernel, int ker_row, int ker_col,
 						vector<float> & ret, int& ret_row, int& ret_col, int mode){
-	if(ker_col==0||ker_row)
+	if(ker_col==0||ker_row==0)
 		ERR("invalid kernel size 0!");
 	if(img_col==0||img_row==0)
 		ERR("invalid image size 0!");
@@ -18,6 +28,10 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 		ERR("invalid image size, smaller than kernel!");
 	if(1!=ker_col%2||1!=ker_row%2)
 		ERR("kernel height or width is not odd!");
+	if(image.size()!=img_row*img_col)
+		ERR("image vector size is not correct!");
+	if(kernel.size()!=ker_row*ker_col)
+		ERR("kernel vector size is not correct!");
 
 	arma::fmat m_img(image);
 	m_img.reshape(img_col, img_row);
@@ -30,6 +44,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 		ret_col=img_col;
 		ret_row=img_row-ker_row/2;
 		arma::fmat m_ret(ret_row, ret_col);
+		m_ret.fill(0);
 		for(int i=0;i<ker_row;i++){
 			for(int j=0;j<ker_col;j++){
 				int x=j+1-(ker_col/2+1);
@@ -62,7 +77,9 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 					h=ret_row;
 					w=ret_col-x;
 				}
-				m_ret.submat(ret_x, ret_y, ret_x+w-1, ret_y+h-1)+=m_img.submat(img_x, img_y, img_x+w-1, img_y+h-1)*m_ker(i,j);
+				//printf("ret_x=%d, ret_y=%d, w=%d, h=%d, img_x=%d, img_y=%d\n", ret_x, ret_y, w, h, img_x, img_y);
+				m_ret.submat(ret_y, ret_x, ret_y+h-1, ret_x+w-1)+=m_img.submat(img_y, img_x, img_y+h-1, img_x+w-1)*m_ker(i,j);
+				//std::cout<<"success"<<std::endl;	
 			}
 		}
 		m_ret=m_ret.t();
@@ -72,6 +89,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 		ret_col=img_col;
 		ret_row=img_row-ker_row/2*2;
 		arma::fmat m_ret(ret_row, ret_col);
+		m_ret.fill(0);
 		for(int i=0;i<ker_row;i++){
 			for(int j=0;j<ker_col;j++){
 				int x=j+1-(ker_col/2+1);
@@ -82,7 +100,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 					img_y=ker_row/2+y;
 					ret_x=-x;
 					ret_y=0;
-					h=y;
+					h=ret_row;
 					w=ret_col+x;
 				}else if(x<=0 && y >0){
 					img_x=0;
@@ -105,7 +123,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 					h=ret_row;
 					w=ret_col-x;
 				}
-				m_ret.submat(ret_x, ret_y, ret_x+w-1, ret_y+h-1)+=m_img.submat(img_x, img_y, img_x+w-1, img_y+h-1)*m_ker(i,j);
+				m_ret.submat(ret_y, ret_x, ret_y+h-1, ret_x+w-1)+=m_img.submat(img_y, img_x, img_y+h-1, img_x+w-1)*m_ker(i,j);
 			}
 		}
 		m_ret=m_ret.t();
@@ -116,6 +134,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 		ret_col=img_col;
 		ret_row=img_row-ker_row/2;
 		arma::fmat m_ret(ret_row, ret_col);
+		m_ret.fill(0);
 		for(int i=0;i<ker_row;i++){
 			for(int j=0;j<ker_col;j++){
 				int x=j+1-(ker_col/2+1);
@@ -126,7 +145,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 					img_y=ker_row/2+y;
 					ret_x=-x;
 					ret_y=0;
-					h=y;
+					h=ret_row;
 					w=ret_col+x;
 				}else if(x<=0 && y >0){
 					img_x=0;
@@ -149,12 +168,12 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 					h=ret_row-y;
 					w=ret_col-x;
 				}
-				m_ret.submat(ret_x, ret_y, ret_x+w-1, ret_y+h-1)+=m_img.submat(img_x, img_y, img_x+w-1, img_y+h-1)*m_ker(i,j);
+				m_ret.submat(ret_y, ret_x, ret_y+h-1, ret_x+w-1)+=m_img.submat(img_y, img_x, img_y+h-1, img_x+w-1)*m_ker(i,j);
 			}
 		}
 		m_ret=m_ret.t();
 		m_ret.reshape(1,ret_row*ret_col);
-		ret=arma::conv_to<vector<float> >::from(m_ret);
+		ret=arma::conv_to<vector<float> >::from(m_ret); 
 
 	}else{
 		ERR("invalid mode, should be 1(uppest), 2(middle), or 3(downnest).");
@@ -162,15 +181,16 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 	return 0;
 }
 
-int main(){
-	vector<float> image={1,2,3,4,5,6,7,8,9};
+//the main() is for debug
+/*int main(){
+	vector<float> image={1.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	vector<float> kernel={-1,-1,-1,-1,9,-1,-1,-1,-1};
 	vector<float> ret;
 	int ret_col, ret_row;
-	process(image, 3, 3, kernel, 3, 3, ret, ret_row, ret_col, 1);
-	std::cout<<"Size is: "<<ret.size()<<std::endl;
+	process(image, 4, 4, kernel, 3, 3, ret, ret_row, ret_col, 1);
+	std::cout<<"Size is: "<<ret_row<<", "<<ret_col<<std::endl;
 	for(int i=0;i<ret.size();i++){
 		std::cout<<ret[i]<<" ";
 	}
 	std::cout<<std::endl;
-}
+}*/
