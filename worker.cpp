@@ -1,4 +1,5 @@
 #include "worker.h"
+#define ARMA_DONT_USE_CXX11
 #include <armadillo>
 #include <vector>
 #include <cstdlib>

@@ -15,4 +15,4 @@ worker.o: worker.cpp worker.h
 	$(CC) $(CFLAGS) -I armadillo-5.200.1/include -c $^
 
 clean:
-	rm *.o
+	rm *.o *.h.gch
