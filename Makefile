@@ -12,7 +12,7 @@ sptw.o: sptw/sptw.cc sptw/sptw.h sptw/utils.h
 	$(CC) -c -o $@ sptw/sptw.cc
 
 worker.o: worker.cpp worker.h
-	$(CC) $(CFLAGS) -I armadillo-5.200.1/include -c $^
+	$(CC) -I armadillo-5.200.1/include -c $^
 
 clean:
 	rm *.o *.h.gch
