@@ -2,7 +2,7 @@ CC=g++
 CFLAGS= -std=c++0x
 
 
-all: main.o sptw.o worker_debug
+all: main.o sptw.o worker.o
 	$(CC) -o main $< 
 
 main.o: main.cc
