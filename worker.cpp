@@ -19,8 +19,19 @@ using std::vector;
 	* result matrix. 
 */
 
-int process(vector<float>image, int img_row, int img_col, vector<float>kernel, int ker_row, int ker_col,
-						vector<float> & ret, int& ret_row, int& ret_col, int mode){
+float* matrixToArray(arma::fmat matrix, int rows, int cols){
+	std::cout<<"reach here"<<std::endl;
+	float* ret=(float*)malloc(sizeof(float)*rows*cols);
+	for(int i=0;i<rows;i++){
+		for(int j=0;j<cols;j++){
+			ret[i*cols+j]=matrix(i, j);
+		}
+	}
+	return ret;
+}
+
+int process(float* pImage, int img_row, int img_col, float* pKernel, int ker_row, int ker_col,
+						float*& pRet, int& ret_row, int& ret_col, int mode){
 	if(ker_col==0||ker_row==0)
 		ERR("invalid kernel size 0!");
 	if(img_col==0||img_row==0)
@@ -29,16 +40,12 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 		ERR("invalid image size, smaller than kernel!");
 	if(1!=ker_col%2||1!=ker_row%2)
 		ERR("kernel height or width is not odd!");
-	if(image.size()!=img_row*img_col)
-		ERR("image vector size is not correct!");
-	if(kernel.size()!=ker_row*ker_col)
-		ERR("kernel vector size is not correct!");
+	if(pRet!=NULL)
+		ERR("input matrix pointer is not NULL!");
 
-	arma::fmat m_img(image);
-	m_img.reshape(img_col, img_row);
+	arma::fmat m_img(pImage, img_col, img_row);
 	m_img=m_img.t();
-	arma::fmat m_ker(kernel);
-	m_ker.reshape(ker_col, ker_row);
+	arma::fmat m_ker(pKernel, ker_col, ker_row);
 	m_ker=m_ker.t();
 
 	if(mode==1){		
@@ -83,9 +90,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 				//std::cout<<"success"<<std::endl;	
 			}
 		}
-		m_ret=m_ret.t();
-		m_ret.reshape(1,ret_row*ret_col);
-		ret=arma::conv_to<vector<float> >::from(m_ret);
+		pRet=matrixToArray(m_ret, ret_row, ret_col);
 	}else if(mode==2){		
 		ret_col=img_col;
 		ret_row=img_row-ker_row/2*2;
@@ -127,9 +132,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 				m_ret.submat(ret_y, ret_x, ret_y+h-1, ret_x+w-1)+=m_img.submat(img_y, img_x, img_y+h-1, img_x+w-1)*m_ker(i,j);
 			}
 		}
-		m_ret=m_ret.t();
-		m_ret.reshape(1,ret_row*ret_col);
-		ret=arma::conv_to<vector<float> >::from(m_ret);
+		pRet=matrixToArray(m_ret, ret_row, ret_col);
 
 	}else if(mode==3){
 		ret_col=img_col;
@@ -172,9 +175,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 				m_ret.submat(ret_y, ret_x, ret_y+h-1, ret_x+w-1)+=m_img.submat(img_y, img_x, img_y+h-1, img_x+w-1)*m_ker(i,j);
 			}
 		}
-		m_ret=m_ret.t();
-		m_ret.reshape(1,ret_row*ret_col);
-		ret=arma::conv_to<vector<float> >::from(m_ret); 
+		pRet=matrixToArray(m_ret, ret_row, ret_col);
 
 	}else if(mode==4){		//
 		ret_col=img_col;
@@ -208,10 +209,7 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 				m_ret.submat(ret_y, ret_x, ret_y+h-1, ret_x+w-1)+=m_img.submat(img_y, img_x, img_y+h-1, img_x+w-1)*m_ker(i,j);
 			}
 		}
-		m_ret=m_ret.t();
-		m_ret.reshape(1,ret_row*ret_col);
-		ret=arma::conv_to<vector<float> >::from(m_ret); 
-
+		pRet=matrixToArray(m_ret, ret_row, ret_col);
 	}
 	else{
 		ERR("invalid mode, should be 1(uppest), 2(middle), or 3(downnest).");
@@ -221,13 +219,13 @@ int process(vector<float>image, int img_row, int img_col, vector<float>kernel, i
 
 //the main() is for debug
 /*int main(){
-	vector<float> image={1.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-	vector<float> kernel={-1,-1,-1,-1,9,-1,-1,-1,-1};
-	vector<float> ret;
+	float image[]={1.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+	float kernel[]={-1,-1,-1,-1,9,-1,-1,-1,-1};
+	float* ret=NULL;
 	int ret_col, ret_row;
-	process(image, 4, 4, kernel, 3, 3, ret, ret_row, ret_col, 4);
+	process(image, 4, 4, kernel, 3, 3, ret, ret_row, ret_col, 1);
 	std::cout<<"Size is: "<<ret_row<<", "<<ret_col<<std::endl;
-	for(int i=0;i<ret.size();i++){
+	for(int i=0;i<ret_row*ret_col;i++){
 		std::cout<<ret[i]<<" ";
 	}
 	std::cout<<std::endl;
