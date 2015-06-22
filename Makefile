@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS= -std=c++11
+CFLAGS= -std=c++0x
 
 
 all: main.o sptw.o worker_debug
@@ -11,8 +11,8 @@ main.o: main.cc
 sptw.o: sptw/sptw.cc sptw/sptw.h sptw/utils.h
 	$(CC) -c -o $@ sptw/sptw.cc
 
-worker_debug: worker.cpp
-	$(CC) $(CFLAGS) -I armadillo-5.200.1/include -o $@ $^ -lblas -llapack
+worker.o: worker.cpp worker.h
+	$(CC) $(CFLAGS) -I armadillo-5.200.1/include -c $^
 
 clean:
-	rm worker_debug
+	rm *.o
